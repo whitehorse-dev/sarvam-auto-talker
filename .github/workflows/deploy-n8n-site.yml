@@ -1,0 +1,50 @@
+name: Deploy n8n.howtheyearned.com
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/deploy-n8n-site.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SSH_HOST: 93.127.199.191
+      SSH_USER: n8n-sarvam
+      APP_DIR: /home/n8n-sarvam/apps/n8n.howtheyearned.com
+      PM2_APP_NAME: n8n-sarvam-site
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate site files
+        run: |
+          test -f web/index.html
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s' "${{ secrets.N8N_SARVAM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync web files
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            web/ "$SSH_USER@$SSH_HOST:$APP_DIR/public/"
+
+      - name: Restart app
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" "\
+            pm2 restart $PM2_APP_NAME --update-env || \
+            (cd $APP_DIR && PORT=3004 pm2 start npm --name $PM2_APP_NAME -- start && pm2 save)\
+          "
