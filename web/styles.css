@@ -1,0 +1,154 @@
+:root {
+  --bg: #f3f6fb;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #d9e0ec;
+  --accent: #0046b8;
+  --accent-2: #098d65;
+  --danger: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #e6f0ff 0%, transparent 42%),
+    radial-gradient(circle at 90% 85%, #ddf8ef 0%, transparent 35%),
+    var(--bg);
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(3, 22, 56, 0.08);
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.session-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.session-row input {
+  min-width: 240px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.status {
+  margin-top: 10px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(3, 22, 56, 0.08);
+}
+
+.card h2 {
+  margin: 0;
+}
+
+.lang {
+  margin: 6px 0 14px;
+  color: var(--muted);
+}
+
+.talk-btn,
+.retry-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.talk-btn {
+  background: var(--accent);
+  color: #fff;
+}
+
+.talk-btn.recording {
+  background: var(--danger);
+}
+
+.retry-btn {
+  margin-top: 10px;
+  background: #e8efff;
+  color: #143a76;
+}
+
+.retry-btn:disabled,
+.talk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.panel {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.panel p {
+  margin: 0;
+  min-height: 42px;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .session-row input {
+    width: 100%;
+  }
+}

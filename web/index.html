@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hindi-English Live Interpreter</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <h1>Live Interpreter</h1>
+      <p>Hindi <-> English tap-to-talk MVP</p>
+      <div class="session-row">
+        <label for="session-id">Session</label>
+        <input id="session-id" type="text" />
+      </div>
+      <div id="status" class="status">Ready</div>
+    </header>
+
+    <section class="grid">
+      <article class="card" id="card-a">
+        <h2>User A</h2>
+        <p class="lang">Speaks Hindi -> Listener hears English</p>
+        <button class="talk-btn" data-role="A">Tap to Talk</button>
+        <button class="retry-btn" data-role="A" disabled>Retry Last Turn</button>
+
+        <div class="panel">
+          <h3>Transcript (Hindi)</h3>
+          <p id="transcript-a">-</p>
+        </div>
+        <div class="panel">
+          <h3>Translation (English)</h3>
+          <p id="translation-a">-</p>
+        </div>
+      </article>
+
+      <article class="card" id="card-b">
+        <h2>User B</h2>
+        <p class="lang">Speaks English -> Listener hears Hindi</p>
+        <button class="talk-btn" data-role="B">Tap to Talk</button>
+        <button class="retry-btn" data-role="B" disabled>Retry Last Turn</button>
+
+        <div class="panel">
+          <h3>Transcript (English)</h3>
+          <p id="transcript-b">-</p>
+        </div>
+        <div class="panel">
+          <h3>Translation (Hindi)</h3>
+          <p id="translation-b">-</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
