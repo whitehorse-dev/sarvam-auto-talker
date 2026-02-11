@@ -12,18 +12,13 @@ const translationEls = {
 };
 
 const talkButtons = Array.from(document.querySelectorAll(".talk-btn"));
-const retryButtons = Array.from(document.querySelectorAll(".retry-btn"));
 
 const state = {
   stream: null,
   mediaRecorder: null,
   chunks: [],
   activeRole: null,
-  processing: false,
-  lastTurnByRole: {
-    A: null,
-    B: null
-  }
+  processing: false
 };
 
 sessionInput.value = `session-${Math.random().toString(36).slice(2, 8)}`;
@@ -37,10 +32,6 @@ function setBusy(isBusy) {
   state.processing = isBusy;
   talkButtons.forEach((btn) => {
     btn.disabled = isBusy;
-  });
-  retryButtons.forEach((btn) => {
-    const role = btn.dataset.role;
-    btn.disabled = isBusy || !state.lastTurnByRole[role];
   });
 }
 
@@ -146,7 +137,6 @@ async function stopRecordingAndSend(role) {
 
   const type = state.chunks[0]?.type || "audio/webm";
   const blob = new Blob(state.chunks, { type });
-  state.lastTurnByRole[role] = blob;
 
   await submitTurn(role, blob);
   setBusy(false);
@@ -240,30 +230,6 @@ async function playOutputAudio(audio, role, fallbackText) {
     }
   }
 }
-
-retryButtons.forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    if (state.processing) {
-      return;
-    }
-
-    const role = btn.dataset.role;
-    const lastBlob = state.lastTurnByRole[role];
-    if (!lastBlob) {
-      return;
-    }
-
-    try {
-      setBusy(true);
-      setStatus(`Retrying last turn for ${role}...`);
-      await submitTurn(role, lastBlob);
-    } catch (error) {
-      setStatus(error.message || "Retry failed.", true);
-    } finally {
-      setBusy(false);
-    }
-  });
-});
 
 talkButtons.forEach(attachTapEvents);
 setBusy(false);

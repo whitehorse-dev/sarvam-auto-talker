@@ -89,8 +89,7 @@ body {
   color: var(--muted);
 }
 
-.talk-btn,
-.retry-btn {
+.talk-btn {
   width: 100%;
   border: 0;
   border-radius: 12px;
@@ -108,13 +107,6 @@ body {
   background: var(--danger);
 }
 
-.retry-btn {
-  margin-top: 10px;
-  background: #e8efff;
-  color: #143a76;
-}
-
-.retry-btn:disabled,
 .talk-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
