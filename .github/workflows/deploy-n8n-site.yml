@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "web/**"
+      - "server/**"
       - ".github/workflows/deploy-n8n-site.yml"
   workflow_dispatch:
 
@@ -27,6 +28,8 @@ jobs:
       - name: Validate site files
         run: |
           test -f web/index.html
+          test -f server/package.json
+          test -f server/src/index.js
 
       - name: Setup SSH key
         run: |
@@ -38,13 +41,39 @@ jobs:
 
       - name: Sync web files
         run: |
+          ssh "$SSH_USER@$SSH_HOST" "mkdir -p $APP_DIR/web $APP_DIR/server"
           rsync -az --delete \
             --exclude '.git' \
-            web/ "$SSH_USER@$SSH_HOST:$APP_DIR/public/"
+            web/ "$SSH_USER@$SSH_HOST:$APP_DIR/web/"
 
-      - name: Restart app
+      - name: Sync server files
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --filter='P .env' \
+            server/ "$SSH_USER@$SSH_HOST:$APP_DIR/server/"
+
+      - name: Write server env (optional)
+        if: ${{ secrets.N8N_SARVAM_SERVER_ENV != '' }}
+        run: |
+          printf '%s' "${{ secrets.N8N_SARVAM_SERVER_ENV }}" > server_env.tmp
+          scp server_env.tmp "$SSH_USER@$SSH_HOST:$APP_DIR/server/.env"
+          rm -f server_env.tmp
+          ssh "$SSH_USER@$SSH_HOST" "chmod 600 $APP_DIR/server/.env"
+
+      - name: Install server dependencies
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" "cd $APP_DIR/server && npm ci --omit=dev"
+
+      - name: Restart backend
         run: |
           ssh "$SSH_USER@$SSH_HOST" "\
-            pm2 restart $PM2_APP_NAME --update-env || \
-            (cd $APP_DIR && PORT=3004 pm2 start npm --name $PM2_APP_NAME -- start && pm2 save)\
+            pm2 delete $PM2_APP_NAME >/dev/null 2>&1 || true; \
+            cd $APP_DIR/server && PORT=3004 NODE_ENV=production pm2 start npm --name $PM2_APP_NAME -- start; \
+            pm2 save\
           "
+
+      - name: Verify health
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" "curl -fsS http://127.0.0.1:3004/health"
