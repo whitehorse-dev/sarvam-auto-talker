@@ -55,12 +55,15 @@ jobs:
             server/ "$SSH_USER@$SSH_HOST:$APP_DIR/server/"
 
       - name: Write server env (optional)
-        if: ${{ secrets.N8N_SARVAM_SERVER_ENV != '' }}
         run: |
-          printf '%s' "${{ secrets.N8N_SARVAM_SERVER_ENV }}" > server_env.tmp
-          scp server_env.tmp "$SSH_USER@$SSH_HOST:$APP_DIR/server/.env"
-          rm -f server_env.tmp
-          ssh "$SSH_USER@$SSH_HOST" "chmod 600 $APP_DIR/server/.env"
+          if [ -n "${{ secrets.N8N_SARVAM_SERVER_ENV }}" ]; then
+            printf '%s' "${{ secrets.N8N_SARVAM_SERVER_ENV }}" > server_env.tmp
+            scp server_env.tmp "$SSH_USER@$SSH_HOST:$APP_DIR/server/.env"
+            rm -f server_env.tmp
+            ssh "$SSH_USER@$SSH_HOST" "chmod 600 $APP_DIR/server/.env"
+          else
+            echo "N8N_SARVAM_SERVER_ENV not set; keeping existing server/.env on host"
+          fi
 
       - name: Install server dependencies
         run: |
