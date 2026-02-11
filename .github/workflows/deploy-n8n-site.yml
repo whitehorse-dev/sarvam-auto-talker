@@ -37,14 +37,23 @@ jobs:
           chmod 700 ~/.ssh
           printf '%s' "${{ secrets.N8N_SARVAM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          cat > ~/.ssh/config << EOF
+          Host deploy-host
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking accept-new
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Sync web files
         run: |
-          ssh "$SSH_USER@$SSH_HOST" "mkdir -p $APP_DIR/web $APP_DIR/server"
+          ssh deploy-host "mkdir -p $APP_DIR/web $APP_DIR/server"
           rsync -az --delete \
             --exclude '.git' \
-            web/ "$SSH_USER@$SSH_HOST:$APP_DIR/web/"
+            web/ "deploy-host:$APP_DIR/web/"
 
       - name: Sync server files
         run: |
@@ -52,26 +61,26 @@ jobs:
             --exclude '.git' \
             --exclude 'node_modules' \
             --filter='P .env' \
-            server/ "$SSH_USER@$SSH_HOST:$APP_DIR/server/"
+            server/ "deploy-host:$APP_DIR/server/"
 
       - name: Write server env (optional)
         run: |
           if [ -n "${{ secrets.N8N_SARVAM_SERVER_ENV }}" ]; then
             printf '%s' "${{ secrets.N8N_SARVAM_SERVER_ENV }}" > server_env.tmp
-            scp server_env.tmp "$SSH_USER@$SSH_HOST:$APP_DIR/server/.env"
+            scp server_env.tmp "deploy-host:$APP_DIR/server/.env"
             rm -f server_env.tmp
-            ssh "$SSH_USER@$SSH_HOST" "chmod 600 $APP_DIR/server/.env"
+            ssh deploy-host "chmod 600 $APP_DIR/server/.env"
           else
             echo "N8N_SARVAM_SERVER_ENV not set; keeping existing server/.env on host"
           fi
 
       - name: Install server dependencies
         run: |
-          ssh "$SSH_USER@$SSH_HOST" "cd $APP_DIR/server && npm ci --omit=dev"
+          ssh deploy-host "cd $APP_DIR/server && npm ci --omit=dev"
 
       - name: Restart backend
         run: |
-          ssh "$SSH_USER@$SSH_HOST" "\
+          ssh deploy-host "\
             pm2 delete $PM2_APP_NAME >/dev/null 2>&1 || true; \
             cd $APP_DIR/server && PORT=3004 NODE_ENV=production pm2 start npm --name $PM2_APP_NAME -- start; \
             pm2 save\
@@ -79,4 +88,4 @@ jobs:
 
       - name: Verify health
         run: |
-          ssh "$SSH_USER@$SSH_HOST" "curl -fsS http://127.0.0.1:3004/health"
+          ssh deploy-host "curl -fsS http://127.0.0.1:3004/health"
