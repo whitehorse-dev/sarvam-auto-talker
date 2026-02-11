@@ -16,10 +16,10 @@ jobs:
     permissions:
       contents: read
     env:
-      SSH_HOST: 93.127.199.191
-      SSH_USER: n8n-sarvam
-      APP_DIR: /home/n8n-sarvam/apps/n8n.howtheyearned.com
-      PM2_APP_NAME: n8n-sarvam-site
+      SSH_HOST: ${{ secrets.N8N_SARVAM_SSH_HOST }}
+      SSH_USER: ${{ secrets.N8N_SARVAM_SSH_USER }}
+      APP_DIR: ${{ secrets.N8N_SARVAM_APP_DIR }}
+      PM2_APP_NAME: ${{ secrets.N8N_SARVAM_PM2_APP_NAME }}
 
     steps:
       - name: Checkout
@@ -33,18 +33,23 @@ jobs:
 
       - name: Setup SSH key
         run: |
+          test -n "$SSH_HOST"
+          test -n "$SSH_USER"
+          test -n "$APP_DIR"
+          test -n "$PM2_APP_NAME"
+          test -n "${{ secrets.N8N_SARVAM_KNOWN_HOSTS }}"
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s' "${{ secrets.N8N_SARVAM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          touch ~/.ssh/known_hosts
+          printf '%s\n' "${{ secrets.N8N_SARVAM_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           cat > ~/.ssh/config << EOF
           Host deploy-host
             HostName $SSH_HOST
             User $SSH_USER
             IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking accept-new
+            StrictHostKeyChecking yes
           EOF
           chmod 600 ~/.ssh/config
 
